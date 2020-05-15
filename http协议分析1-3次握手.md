@@ -1,32 +1,32 @@
 本节来分析一下http协议，稍再总结一份HTTP协议详解吧！放个坑在这里待填-哈哈
 # 1、利用wireshark抓包，如图：
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-18-32-39.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-18-32-39.png)
 话说现在都是https了，特意想找个http网页也麻烦
 
 图中开始就是三次握手，HTTP使用TCP作为它的支撑运输协议。基于tcp链接的数据报文传输前必须建立三次握手，我们先分析一下前三个tcp报文。
 ## 第一个报文
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-18-46-01.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-18-46-01.png)
 这是第一个报文，它是由:tcp-->ip--->eth--->frame, 没有数据报文，说明第一个tcp不携带数据，同样其余两个也一样都是握手信号，只有握手成功，才能传递数据。
 
 如何判别它是握手信息还是数据报文呢---->我们再进一步分析
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-18-48-18.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-18-48-18.png)
 帧长度为66字节
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-18-50-46.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-18-50-46.png)
 MAC头为14字节
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-18-54-28.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-18-54-28.png)
 IP头为20字节
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-18-55-54.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-18-55-54.png)
 TCP头部一般为20~60字节，此处TCP头为32字节
 
 可见，整个报文只有 MAC头+IP头+TCP头，没有携带数据。
 
 ### 我们返回去重新看一下MAC头部信息
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-18-59-03.png)
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-19-01-16.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-18-59-03.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-19-01-16.png)
 它指定src_mac 和 dst_mac 和ip层协议ipv4 = 0x0800(2bytes)--2个字节标识出以太网帧所携带的上层数据类型（如0x0800代表上一层是IPv4协议，0x0806为arp, 0x86DD为IPv6）
 ### 继续看IP头
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-19-03-31.png)
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-19-04-11.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-19-03-31.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-19-04-11.png)
 它指明
 
 version:4  
@@ -53,8 +53,8 @@ differentiated services field :0x00  ---区分服务
 目的IP地址：32位（bit），4个字节，每一个字节为0～255之间的整数，及我们日常见到的IP地址格式。
 
 ### 再来看看TCP头部
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-19-10-23.png)
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-19-11-06.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-19-10-23.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-19-11-06.png)
 tcp报文中指出了src_port和dst_port （此处我们是HTTP协议，目的端口为80）
 
 tcp segmet len: 没有分片
@@ -66,7 +66,7 @@ tcp_header_length = 40
 数据偏移／首部长度：4bits。由于首部可能含有可选项内容，因此TCP报头的长度是不确定的，报头不包含任何任选字段则长度为20字节，4位首部长度字段所能表示的最大值为1111，转化为10进制为15，15*32/8 = 60，故报头最大长度为60字节。首部长度也叫数据偏移，是因为首部长度实际上指示了数据区在报文段中的起始偏移值。
 
 flags标志很有作用
-![](https://github.com/renchg/blog/blob/master/img/2020-05-15-19-16-16.png)
+![](https://github.com/renchg/blog/raw/master/img/2020-05-15-19-16-16.png)
 这个有几个标志位，置1则表示对应信号
 
 congestion --拥塞
